@@ -40,7 +40,7 @@ library(shinysurveys)
 ##1 - Data load 
 ###############
 
-df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/New/dma.xlsx', sheet = 'Questions')
+df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
 #df_dma_q <- read_csv('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/New/dma.xlsx')
 
 ###############
@@ -107,9 +107,9 @@ ui <- page_sidebar(
       }"
   )),
   
-  # tags$head(
-  #   tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
-  # ),
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+  ),
   
   theme = bs_theme(
     bootswatch = "yeti",
@@ -213,10 +213,14 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$submit, {
-    showModal(modalDialog(
+   
+     showModal(modalDialog(
       title = "Congrats, you completed Data Maturity Survey!",
       "You can customize what actions happen when a user finishes a survey using input$submit."
     ))
+    
+    response_data <- getSurveyData()
+    print(response_data)
   })
 }
 

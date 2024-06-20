@@ -2,3 +2,24 @@
   font-family: 'Arial', sans-serif;
   background-color: #f8f8f8 ;
 }
+
+.shiny-input-container:not(.shiny-input-container-inline) {
+    width: 90%;
+    max-width: 100%;
+}
+
+.shiny-input-container .radio label {    
+margin-bottom: 10px;
+font-size: 0.8rem;
+font-style: italic;
+}
+
+.shiny-options-group .radio {
+    margin-right: 10px; /* Add margin to the right of each radio button option */
+}
+
+.shiny-options-group  {
+    display: flex;
+    margin-right: 10px;
+    flex-wrap: wrap; /* Ensure options wrap to the next line if they don't fit */
+}
