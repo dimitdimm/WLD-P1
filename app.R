@@ -48,7 +48,7 @@ df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/G
 ###############
 
 
-assessments = c("Digital Maturity","Data maturity","NIS2")
+assessments = c("","Digital Maturity","Data maturity","NIS2")
 
 sidebar_content <-
   list(
@@ -61,9 +61,11 @@ sidebar_content <-
       choices = assessments,
       options = list(
         `actions-box` = TRUE),
-      selected = "",
+      selected = NULL,
       multiple = FALSE
     ),
+    actionButton("confirm_btn", "Confirm Selection", class = "btn-primary"),
+    actionButton("submit", "Submit Survey", style = "display:none;"),
     
     
    
@@ -208,6 +210,37 @@ ui <- page_sidebar(
 
 server <- function(input, output, session) {
   #bs_themer() 
+  
+  # Store the selected survey
+  selectedSurvey <- reactiveVal(NULL)
+  
+  # Observe confirmation button
+  observeEvent(input$confirm_btn, {
+    if (is.null(input$assessment_seleted) || input$assessment_seleted == "") {
+      showModal(modalDialog(
+        title = "Error",
+        "Please select a survey from the dropdown menu.",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    } else {
+      showModal(modalDialog(
+        title = "Confirmation",
+        paste("Do you want to proceed with", input$assessment_seleted, "?"),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("ok", "OK")
+        )
+      ))
+    }
+  })
+  
+  # Handle modal confirmation
+  observeEvent(input$ok, {
+    selectedSurvey(input$assessment_seleted)
+    removeModal()
+    show("submit")
+  })
   
   shinysurveys::renderSurvey()
   
