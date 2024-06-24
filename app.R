@@ -1,5 +1,6 @@
 
 library(shiny)
+library(shinyjs)
 library(shinyWidgets)
 library(bslib)
 library(bsicons)
@@ -41,7 +42,17 @@ library(shinysurveys)
 ###############
 
 df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
+df_dm_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
+df_nis_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
 #df_dma_q <- read_csv('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/New/dma.xlsx')
+
+
+
+surveys <- list(
+  "survey_dma" = df_dma_q,
+  "survey_dm" = df_dm_q,
+  "survey_nis" = df_nis_q
+)
 
 ###############
 # Layout 
@@ -65,10 +76,10 @@ sidebar_content <-
       multiple = FALSE
     ),
     actionButton("confirm_btn", "Confirm Selection", class = "btn-primary"),
-    actionButton("submit", "Submit Survey", style = "display:none;"),
     
     
-   
+    
+    
     
     tags$br(), 
     tags$br(),
@@ -87,7 +98,7 @@ sidebar_content <-
     tags$br(), 
     tags$br(),
     tags$br(),
-
+    
     
     "© WLD Company"
   )
@@ -135,73 +146,68 @@ ui <- page_sidebar(
   
   navset_card_tab(
     
-  
+    
     
     nav_panel(
-      
-      title = "Assment",
+      title = "Assessment",
       fluid = FALSE,
-      
-      
-      
-      shinysurveys::surveyOutput(df = df_dma_q,
-                 survey_title = "Data Maturity Assessment",
-                 survey_description = "A minimal description",
-                 theme = "#f8f8f8" # modifies entire BSLIB theme Body bg-color !!!!!!!! 
-                 )
-      
-      
-    ),
-      
-      
-      
-    nav_panel(
-          
-          title = "Results",
-          fluid = TRUE,
-          layout_columns(  
-            
-            column(12, h5("1st Column"),
-                   card(
-                     full_screen = TRUE,
-                     class = "bold-cards",
-                     card_header("One One")
-                     ),
-                   value_box(
-                     title = tags$p("Value Box"),
-                     showcase_layout = c("left center"),
-                     textOutput("VB1"),
-                     value = p("VB1") ,
-                     p("Overall result:"),
-                     p("Drill down 1: "),
-                     p("Drill down2: ")
-                   ),
-                   
-                   ),
-            column(12, h5("2nd Column"),
-                   card(
-                     full_screen = TRUE,
-                     class = "bold-cards",
-                     card_header("Two Two")
-                    ),
-                   value_box(
-                     title = tags$p("Value Box2"),
-                     showcase_layout = c("left center"),
-                     textOutput("VB2"),
-                     value = p("VB2") ,
-                     p("Overall result:"),
-                     p("Drill down 1: "),
-                     p("Drill down2: ")
-                   )
-                   )
-            
-            )
-          )
+      mainPanel(
+        useShinyjs(),
+        uiOutput("survey_ui")
+        
         
       )
+    ),
     
-)
+    
+    
+    nav_panel(
+      
+      title = "Results",
+      fluid = TRUE,
+      layout_columns(  
+        
+        column(12, h5("1st Column"),
+               card(
+                 full_screen = TRUE,
+                 class = "bold-cards",
+                 card_header("One One")
+               ),
+               value_box(
+                 title = tags$p("Value Box"),
+                 showcase_layout = c("left center"),
+                 textOutput("VB1"),
+                 value = p("VB1") ,
+                 p("Overall result:"),
+                 p("Drill down 1: "),
+                 p("Drill down2: ")
+               ),
+               
+        ),
+        column(12, h5("2nd Column"),
+               card(
+                 full_screen = TRUE,
+                 class = "bold-cards",
+                 card_header("Two Two")
+               ),
+               value_box(
+                 title = tags$p("Value Box2"),
+                 showcase_layout = c("left center"),
+                 textOutput("VB2"),
+                 value = p("VB2") ,
+                 p("Overall result:"),
+                 p("Drill down 1: "),
+                 p("Drill down2: ")
+               )
+        )
+        
+      )
+    )
+    
+  )
   
+)
+
 
 
 ###############
@@ -211,6 +217,7 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   #bs_themer() 
   
+ 
   # Store the selected survey
   selectedSurvey <- reactiveVal(NULL)
   
@@ -229,33 +236,122 @@ server <- function(input, output, session) {
         paste("Do you want to proceed with", input$assessment_seleted, "?"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("ok", "OK")
+          actionButton("ok_confirmation", "OK")
         )
       ))
     }
   })
   
   # Handle modal confirmation
-  observeEvent(input$ok, {
+  observeEvent(input$ok_confirmation, {
     selectedSurvey(input$assessment_seleted)
     removeModal()
-    show("submit")
-  })
-  
-  shinysurveys::renderSurvey()
-  
-  
-  observeEvent(input$submit, {
-   
-     showModal(modalDialog(
-      title = "Congrats, you completed Data Maturity Survey!",
-      "You can customize what actions happen when a user finishes a survey using input$submit."
-    ))
     
-    response_data <- getSurveyData()
-    print(response_data)
   })
+  
+  # Reactive expression to render the survey after selection
+  output$survey_ui <- renderUI({
+    req(selectedSurvey())
+    survey_questions <- switch(selectedSurvey(),
+                               "Digital Maturity" = surveys[["survey_dma"]],
+                               "Data Maturity" = surveys[["survey_dm"]],
+                               "NIS2" = surveys[["survey_nis"]])
+    
+    shinysurveys::surveyOutput(
+      df = survey_questions,
+      survey_title = paste(selectedSurvey(), "Survey"),
+      survey_description = "Please fill out the survey below."
+    )
+  })
+  
+ 
+   # Validate survey responses
+  validateSurveyResponses <- function(responses, survey_questions) {
+    # Extract unique question IDs
+    unique_questions <- unique(survey_questions$input_id)
+    print("Unique questions:")
+    print(unique_questions) # Debug print
+    
+    print("Responses received:")
+    print(responses) # Debug print
+    
+    # Check if at least one answer is provided for each question ID
+    missing_responses <- sapply(unique_questions, function(question) {
+      # Filter responses for the current question ID
+      relevant_responses <- responses[responses$question_id == question, "response"]
+      # Check if all responses for the question are empty
+      all(relevant_responses == "")
+    })
+    print("Missing responses array:")
+    print(missing_responses) # Debug print
+    
+    return(all(!missing_responses))
+  }
+  
+  # Reactive expression to check if all required questions are answered
+  allQuestionsAnswered <- reactive({
+    req(selectedSurvey())
+    response_data <- shinysurveys::getSurveyData()
+    print("Response data:")
+    print(response_data) # Debug print
+    
+    survey_questions <- switch(selectedSurvey(),
+                               "Digital Maturity" = surveys[["survey_dma"]],
+                               "Data Maturity" = surveys[["survey_dm"]],
+                               "NIS2" = surveys[["survey_nis"]])
+    print("Survey questions:")
+    print(survey_questions) # Debug print
+    
+    validateSurveyResponses(response_data, survey_questions)
+  })
+  
+  
+  # Handle survey submission
+  observeEvent(input$submit, {
+    response_data <- shinysurveys::getSurveyData()
+    print("Response data at submission:")
+    print(response_data) # Debug print
+    
+    survey_questions <- switch(selectedSurvey(),
+                               "Digital Maturity" = surveys[["survey_dma"]],
+                               "Data Maturity" = surveys[["survey_dm"]],
+                               "NIS2" = surveys[["survey_nis"]])
+    print("Survey questions at submission:")
+    print(survey_questions) # Debug print
+    
+    if (validateSurveyResponses(response_data, survey_questions)) {
+      showModal(modalDialog(
+        title = paste("Congrats, you completed the", selectedSurvey(), "Survey!"),
+        "You can customize what actions happen when a user finishes a survey using input$submit."
+      ))
+      print(response_data)
+    } else {
+      showModal(modalDialog(
+        title = "Incomplete Survey",
+        "Please complete all mandatory questions before submitting.",
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    }
+  })
+  
 }
+
+
+#   shinysurveys::renderSurvey()
+#   
+#   
+#   observeEvent(input$submit, {
+#    
+#      showModal(modalDialog(
+#       title = "Congrats, you completed Data Maturity Survey!",
+#       "You can customize what actions happen when a user finishes a survey using input$submit."
+#     ))
+#     
+#     response_data <- getSurveyData()
+#     print(response_data)
+#   })
+# }
 
 
 ###############
