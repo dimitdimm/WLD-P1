@@ -1,6 +1,21 @@
-#Body > {
-  font-family: 'Arial', sans-serif;
-  background-color: #f8f8f8 ;
+body {
+  font-family: 'Arial', sans-serif !important;
+  background-color: #f8f8f8 !important;
+}
+
+.title-description #survey-title {
+  margin-top: 60px !important;
+  margin-bottom: 60px !important;
+  font-family: 'Arial', sans-serif !important;
+  font-weight: bold !important;
+  text-align: left !important;
+}
+
+
+.title-description #survey-description {
+  margin: 30px !important;
+  font-family: 'Arial', sans-serif !important;
+  font-weight: bold !important;
 }
 
 .shiny-input-container:not(.shiny-input-container-inline) {
@@ -14,6 +29,10 @@ font-size: 0.8rem;
 font-style: italic;
 }
 
+.shiny-input-text {
+  font-size: 1rem !important;
+}
+
 .shiny-options-group .radio {
     margin-right: 10px; /* Add margin to the right of each radio button option */
 }
@@ -22,4 +41,9 @@ font-style: italic;
     display: flex;
     margin-right: 10px;
     flex-wrap: wrap; /* Ensure options wrap to the next line if they don't fit */
+}
+
+/* Override Bootstrap's col-sm-8 class */
+.col-sm-8 {
+  width: 80% !important;
 }
