@@ -41,16 +41,19 @@ library(shinysurveys)
 ##1 - Data load 
 ###############
 
-df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
-df_dm_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
-df_nis_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dma')
-#df_dma_q <- read_csv('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/New/dma.xlsx')
+#- Digital Maturity Assessment
+df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dig_ma') 
+#- Data Maturity Assessment
+df_datam_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'data_ma')
+#- NIS2 Assessment
+df_nis_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'nis2')
+
 
 
 
 surveys <- list(
   "survey_dma" = df_dma_q,
-  "survey_dm" = df_dm_q,
+  "survey_datam" = df_datam_q,
   "survey_nis" = df_nis_q
 )
 
@@ -59,7 +62,7 @@ surveys <- list(
 ###############
 
 
-assessments = c("","Digital Maturity","Data maturity","NIS2")
+assessments = c("","Digital Maturity","Data Maturity","NIS2")
 
 sidebar_content <-
   list(
@@ -254,8 +257,11 @@ server <- function(input, output, session) {
     req(selectedSurvey())
     survey_questions <- switch(selectedSurvey(),
                                "Digital Maturity" = surveys[["survey_dma"]],
-                               "Data Maturity" = surveys[["survey_dm"]],
+                               "Data Maturity" = surveys[["survey_datam"]],
                                "NIS2" = surveys[["survey_nis"]])
+    
+    print("Selected Survey:")# Debug print
+    print(survey_questions) # Debug print
     
     shinysurveys::surveyOutput(
       df = survey_questions,
@@ -297,7 +303,7 @@ server <- function(input, output, session) {
     
     survey_questions <- switch(selectedSurvey(),
                                "Digital Maturity" = surveys[["survey_dma"]],
-                               "Data Maturity" = surveys[["survey_dm"]],
+                               "Data Maturity" = surveys[["survey_datam"]],
                                "NIS2" = surveys[["survey_nis"]])
     print("Survey questions:")
     print(survey_questions) # Debug print
@@ -314,7 +320,7 @@ server <- function(input, output, session) {
     
     survey_questions <- switch(selectedSurvey(),
                                "Digital Maturity" = surveys[["survey_dma"]],
-                               "Data Maturity" = surveys[["survey_dm"]],
+                               "Data Maturity" = surveys[["survey_datam"]],
                                "NIS2" = surveys[["survey_nis"]])
     print("Survey questions at submission:")
     print(survey_questions) # Debug print
