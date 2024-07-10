@@ -2,6 +2,7 @@
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
+
 library(bslib)
 library(bsicons)
 library(auth0)
@@ -42,11 +43,14 @@ library(shinysurveys)
 ###############
 
 #- Digital Maturity Assessment
-df_dma_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dig_ma') 
+# /Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx
+# C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx
+
+df_dma_q <- read_xlsx('/Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dig_ma') 
 #- Data Maturity Assessment
-df_datam_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'data_ma')
+df_datam_q <- read_xlsx('/Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'data_ma')
 #- NIS2 Assessment
-df_nis_q <- read_xlsx('C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'nis2')
+df_nis_q <- read_xlsx('/Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'nis2')
 
 
 
@@ -70,7 +74,7 @@ sidebar_content <-
     title = "Select Assessment Module",
     
     pickerInput(
-      inputId = "assessment_seleted",
+      inputId = "assessment_selceted",
       label = tags$span(class = "bold-label", "Modules :"), 
       choices = assessments,
       options = list(
@@ -114,7 +118,7 @@ sidebar_content <-
 
 ui <- page_sidebar(
   
-  
+  useShinyjs(),
   
   tags$style(HTML(
     "body {
@@ -155,7 +159,7 @@ ui <- page_sidebar(
       title = "Assessment",
       fluid = FALSE,
       mainPanel(
-        useShinyjs(),
+      
         uiOutput("survey_ui")
         
         
@@ -220,13 +224,51 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
   #bs_themer() 
   
- 
-  # Store the selected survey
+  ### Survey store  FUNCTION 
+  ##########################
+  
+  storeSurveyResponses <- function(responses, survey_id, surveyResponses) {
+    # Create a unique identifier and timestamp
+    submission_id <- paste0("submission_", format(Sys.time(), "%Y%m%d%H%M%S"))
+    timestamp <- Sys.time()
+    
+    # Add submission_id and timestamp to each response
+    responses <- cbind(responses, submission_id = submission_id, timestamp = timestamp, survey_id = survey_id)
+    
+    # Store the responses in a reactive data frame
+    current_responses <- surveyResponses()
+    new_responses <- rbind(current_responses, responses)
+    surveyResponses(new_responses)
+    
+    # Save the responses to a CSV file
+    write.csv(new_responses, "survey_responses.csv", row.names = FALSE)
+    
+    print(new_responses)  # Debug print
+  }
+  
+  
+  ### App reset FUNCTION 
+  ######################
+  
+  resetApp <- function() {
+    shinyjs::reset("assessment_selceted")  # Reset dropdown
+    shinyjs::enable("assessment_selceted")  # Enable dropdown
+    shinyjs::enable("confirm_btn")  # Enable confirm button
+    shinyjs::disable("submit_btn")  # Disable submit button
+    selectedSurvey(NULL)  # Clear selected survey
+  }
+  
+  
+  # Reactive value to store selected survey
   selectedSurvey <- reactiveVal(NULL)
+  
+  # Reactive value to store survey responses
+  surveyResponses <- reactiveVal(data.frame())
+  
   
   # Observe confirmation button
   observeEvent(input$confirm_btn, {
-    if (is.null(input$assessment_seleted) || input$assessment_seleted == "") {
+    if (is.null(input$assessment_selceted) || input$assessment_selceted == "") {
       showModal(modalDialog(
         title = "Error",
         "Please select a survey from the dropdown menu.",
@@ -236,7 +278,7 @@ server <- function(input, output, session) {
     } else {
       showModal(modalDialog(
         title = "Confirmation",
-        paste("Do you want to proceed with", input$assessment_seleted, "?"),
+        paste("Do you want to proceed with", input$assessment_selceted, "?"),
         footer = tagList(
           modalButton("Cancel"),
           actionButton("ok_confirmation", "OK")
@@ -247,8 +289,10 @@ server <- function(input, output, session) {
   
   # Handle modal confirmation
   observeEvent(input$ok_confirmation, {
-    selectedSurvey(input$assessment_seleted)
+    selectedSurvey(input$assessment_selceted)
     removeModal()
+    shinyjs::disable("assessment_selceted")  # Disable dropdown
+    shinyjs::disable("confirm_btn")  # Disable confirm button
     
   })
   
@@ -270,8 +314,8 @@ server <- function(input, output, session) {
     )
   })
   
- 
-   # Validate survey responses
+  
+  # Validate survey responses
   validateSurveyResponses <- function(responses, survey_questions) {
     # Extract unique question IDs
     unique_questions <- unique(survey_questions$input_id)
@@ -315,22 +359,31 @@ server <- function(input, output, session) {
   # Handle survey submission
   observeEvent(input$submit, {
     response_data <- shinysurveys::getSurveyData()
-    print("Response data at submission:")
+    print("Response data at submission:") # Debug print 
     print(response_data) # Debug print
     
     survey_questions <- switch(selectedSurvey(),
                                "Digital Maturity" = surveys[["survey_dma"]],
                                "Data Maturity" = surveys[["survey_datam"]],
                                "NIS2" = surveys[["survey_nis"]])
-    print("Survey questions at submission:")
+    print("Survey questions at submission:") # Debug Print 
     print(survey_questions) # Debug print
     
     if (validateSurveyResponses(response_data, survey_questions)) {
+      
+      # Store the responses in a data frame with timestamp and unique ID
+      storeSurveyResponses(response_data, selectedSurvey(), surveyResponses)
+      
       showModal(modalDialog(
         title = paste("Congrats, you completed the", selectedSurvey(), "Survey!"),
         "You can customize what actions happen when a user finishes a survey using input$submit."
       ))
-      print(response_data)
+      print(response_data) # Debug print 
+      
+      # Reset the app to the initial state
+      resetApp()
+      
+      
     } else {
       showModal(modalDialog(
         title = "Incomplete Survey",
