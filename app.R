@@ -46,6 +46,9 @@ library(shinysurveys)
 # /Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx
 # C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/dma.xlsx
 
+files_path_mac <- "/Users/ddimitrov/Documents/GitHub/WLD-P1/"
+files_path_win <- "C:/Users/ddimitrov8/OneDrive - DXC Production/Documents/GitHub/WLD-P1/"
+
 df_dma_q <- read_xlsx('/Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'dig_ma') 
 #- Data Maturity Assessment
 df_datam_q <- read_xlsx('/Users/ddimitrov/Documents/GitHub/WLD-P1/dma.xlsx', sheet = 'data_ma')
